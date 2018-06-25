@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "CloudElasticCacheModifierLambdaStagingTest"
+    Type: String
+Resources:
+  CWNCloudElasticCacheModifierLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'java8'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full-debug"
+      Handler: 'com.comodo.elasticcachemodifier.CacheLambdaRouter::lamdaHandler'
+      CodeUri: s3://cwn-lambda-function-staging/CloudElasticCacheModifierLambda-2.18.0-SNAPSHOT.jar
+      Environment:
+        Variables:
+          ENV: "STAGING" 
+          LAMBDA_NAME: "aws-elastic-cache-modifier-lambda-STAGING"
+      FunctionName: !Ref LambdaName
+      MemorySize: 512
+      Timeout: 300
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"

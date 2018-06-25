@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "aws-cloudwatch-log-sender-lambda-STAGING-Test"
+    Type: String
+Resources:
+  CWNMSSPRegisterAPIGatewayLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'python2.7'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full-debug"
+      Handler: 'lambda_function.lambda_handler'
+      CodeUri: s3://cwn-lambda-function-staging/cloudwatch-log-sender/lambda_function.zip
+      Environment:
+        Variables:
+          COMODO_ACCESS_TOKEN: "cdcb49a253d34f74b772ef36dce648d8" 
+          COMODO_LOG_COLLECTOR_END_POINT: "https://collector.cwatchapi.com/eventlogcollector/upload"
+      FunctionName: !Ref LambdaName
+      MemorySize: 1152
+      Timeout: 180
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"

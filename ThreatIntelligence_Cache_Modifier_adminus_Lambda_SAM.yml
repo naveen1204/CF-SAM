@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "aws-threat-intelligence-cache-adminus-lambda-STAGING-test"
+    Type: String
+Resources:
+  CWNThreatIntelligenceAdminusSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'java8'
+      Role: "arn:aws:iam::902703094694:role/cww-kinesis-lambda"
+      Handler: 'com.comodo.threatintelligence.cachemodifier.handler.CacheModifierHandler'
+      CodeUri: s3://cwn-lambda-function-staging/aws-threat-intelligence-cache-modifier-lambda-2.18.0-SNAPSHOT.jar
+      Description: "Get Adminus data from ftp and write on redis cache."
+      Environment:
+        Variables:
+          ENV: "STAGING"
+          LAMBDA_NAME: "aws-threat-intelligence-cache-modifier-adminus-lambda-STAGING"
+      FunctionName: !Ref LambdaName
+      MemorySize: 1024
+      Timeout: 300
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"
+  ScheduledRule: 
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: "threat-intelligence-lambda-adminus-trigger-STAGING-test"
+      ScheduleExpression: "cron(30 10 * * ? *)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "CWNThreatIntelligenceAdminusSTAGING"
+              - "Arn"
+          Id: "TargetFunctionV1"
+  PermissionForEventsToInvokeLambda: 
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+      FunctionName: 
+        Ref: "LambdaName"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "ScheduledRule"
+          - "Arn"

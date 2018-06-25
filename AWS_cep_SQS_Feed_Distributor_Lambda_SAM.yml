@@ -1,0 +1,33 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML FILE"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "aws-cep-sqs-feed-distributor-lambda-STAGING-test"
+    Type: String
+Resources:
+  AWScepSQSFeedDistributorLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'python2.7'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full"
+      Handler: 'feeder.lambda_handler'
+      CodeUri: s3://cwn-lambda-function-staging/feeder.zip
+      Environment:
+        Variables:
+          SQS_NAME_PREFIX: "cwn-cep-feed-" 
+          SQS_NAME_SUFFIX: "-STAGING.fifo"
+      FunctionName: !Ref LambdaName
+      MemorySize: 128
+      Timeout: 60
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      Events:
+        AWScepSQSFeedDistributorLambdaStagingSNS:
+          Type: SNS
+          Properties:
+            Topic: "arn:aws:sns:us-east-1:902703094694:cwn-event-object-created"
+

@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "cwn-aws-parquet-planner-lambda-STAGING-test"
+    Type: String
+Resources:
+  CWNParquetPlannerLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'java8'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full-debug"
+      Handler: 'com.comodo.aws.parquet.planner.handler.ParquetPlannerHandler::handleRequest'
+      CodeUri: s3://cwn-lambda-function-staging/CWN-3.0.0-SNAPSHOT/aws-parquet-planner-lambda-3.0.0-SNAPSHOT.jar
+      Environment:
+        Variables:
+          ENV: "STAGING" 
+          LAMBDA_NAME: "aws-parquet-planner-lambda"
+      FunctionName: !Ref LambdaName
+      MemorySize: 512
+      Timeout: 300
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"
+  ScheduledRule: 
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: "ScheduledRule"
+      Description: "5th minute of every hour for Parquet loader"
+      ScheduleExpression: "cron(05 * * * ? *)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "CWNParquetPlannerLambdaSTAGING"
+              - "Arn"
+          Id: "TargetFunctionV1"
+  PermissionForEventsToInvokeLambda: 
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+      FunctionName: 
+        Ref: "LambdaName"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "ScheduledRule"
+          - "Arn"
+

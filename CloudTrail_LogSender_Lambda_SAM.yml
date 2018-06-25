@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML FILE"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "aws-cloudtrail-log-sender-lambda-STAGING-test"
+    Type: String
+Resources:
+  AWSCloudTrailLogSenderLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'python2.7'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full"
+      Handler: 'lambda_handler.lambda_handler'
+      CodeUri: s3://cwn-lambda-function-staging/lambda_handler.zip
+      Description: "cloudtrail log sender"
+      Environment:
+        Variables:
+          COMODO_ACCESS_TOKEN: "cdcb49a253d34f74b772ef36dce648d8" 
+          COMODO_LOG_COLLECTOR_END_POINT: "https://api.mssp.comodo.com/collectionservice/eventlogcollector/upload"
+          SQS_QUEUE_NAME: "cwn-cloudtrail-queue"
+      FunctionName: !Ref LambdaName
+      MemorySize: 192
+      Timeout: 300
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"
+      Events:
+        AWSCloudTrailLogSenderLambdaStagingSNS:
+          Type: SNS
+          Properties:
+            Topic: "arn:aws:sns:us-east-1:902703094694:cloud-trail-cwatch-s3-data-STAGING"
+

@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "CloudFormationTestLambdaSAM"
+    Type: String
+Resources:
+  CloudFormationTestLambdaSAM:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'python2.7'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full"
+      Handler: 'lambda_function.lambda_handler'
+      CodeUri: s3://cwn-lambda-function-staging/lambda_function.zip
+      Description: "Testing SAM Model with CloudFormation YAML"
+      Environment:
+        Variables:
+          COMODO_ACCESS_TOKEN: "f75fc10502e74b0aa491f236a233c430" 
+          COMODO_LOG_COLLECTOR_END_POINT: "https://api.mssp.comodo.com/collectionservice/eventlogcollector/upload"
+      FunctionName: !Ref LambdaName
+      MemorySize: 128
+      Timeout: 60
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: "/var/log/cwn-auth-test3"
+  LogGroupLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: "arn:aws:lambda:us-east-1:902703094694:function:CloudFormationTestLambdaSAM"
+      Action: "lambda:InvokeFunction"
+      Principal: "logs.us-east-1.amazonaws.com"
+      SourceArn: "arn:aws:logs:us-east-1:902703094694:log-group:/var/log/cwn-auth-test3:*"
+      SourceAccount:
+        Ref: "AWS::AccountId"
+    DependsOn: "LogGroup"
+  LogsSubscriptionFilter:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      LogGroupName: "/var/log/cwn-auth-test3"
+      FilterPattern: ""
+      DestinationArn: "arn:aws:lambda:us-east-1:902703094694:function:CloudFormationTestLambdaSAM"
+    DependsOn: "LogGroupLambdaInvokePermission"

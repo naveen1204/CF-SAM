@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "aws-mssp-register-apigateway-lambda-STAGING-Test"
+    Type: String
+Resources:
+  CWNMSSPRegisterAPIGatewayLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'java8'
+      Role: "arn:aws:iam::902703094694:role/cwn-mssp-register-role"
+      Handler: 'com.comodo.mssp.register.apigateway.router.MsspRegisterApiGatewayRouter::lamdaHandler'
+      CodeUri: s3://cwn-lambda-function-staging/
+      Environment:
+        Variables:
+          db_password: "Comodo17!" 
+          db_url: "jdbc:mysql://cwn-management-stag.c6bx66luvm2s.us-east-1.rds.amazonaws.com:3306/MSSP_MAIN"
+          db_user: "comodo"
+          policy_common_arn: "arn:aws:iam::902703094694:policy"
+      FunctionName: !Ref LambdaName
+      MemorySize: 512
+      Timeout: 120
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"

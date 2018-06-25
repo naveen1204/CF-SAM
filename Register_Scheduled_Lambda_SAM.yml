@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Testing SAM Model with CloudFormation YAML"
+Parameters:
+  LambdaName:
+    Description: 'Name of the lambda'
+    Default: "aws-register-scheduled-lambda-STAGING-test"
+    Type: String
+Resources:
+  CWNRegisterScheduledLambdaSTAGING:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Runtime: 'java8'
+      Role: "arn:aws:iam::902703094694:role/cwn-lambda-full"
+      Handler: 'com.comodo.mssp.aws.register.scheculed.lambda.LamdaHandler'
+      CodeUri: s3://cwn-lambda-function-staging/
+      Environment:
+        Variables:
+          ENV: "STAGING" 
+          LAMBDA_NAME: "aws-register-scheduled-lambda-STAGING"
+      FunctionName: !Ref LambdaName
+      MemorySize: 832
+      Timeout: 60
+      Tags:
+        Owner: serkan.sakinmaz@comodo.com
+        Product: CWN
+        Environment: Staging
+      VpcConfig:
+        SecurityGroupIds:
+          - "sg-8c00eaff"
+        SubnetIds:
+          - "subnet-83103daf"
+          - "subnet-d5f3069e"
+  ScheduledRule: 
+    Type: "AWS::Events::Rule"
+    Properties:
+      Name: "cwn-mssp-register-trigger-STAGING-test"
+      Description: "Every 2 minutes"
+      ScheduleExpression: "rate(2 minutes)"
+      State: "ENABLED"
+      Targets: 
+        - 
+          Arn: 
+            Fn::GetAtt: 
+              - "CWNRegisterScheduledLambdaSTAGING"
+              - "Arn"
+          Id: "TargetFunctionV1"
+  PermissionForEventsToInvokeLambda: 
+    Type: "AWS::Lambda::Permission"
+    Properties: 
+      FunctionName: 
+        Ref: "LambdaName"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+          - "ScheduledRule"
+          - "Arn"
+
